@@ -8,6 +8,7 @@ from src.screens.sub_screens.Practice import practice
 from src.screens.sub_screens.Reports import reports
 from src.screens.sub_screens.LearningPlan import learning_plan
 from src.screens.sub_screens.Settings import settings
+from src.screens.sub_screens.Resume_Analyze import resume_analyze
 
 
 def HomeScreen():
@@ -102,3 +103,6 @@ def HomeScreen():
 
             case "Setting":
                 settings()
+                
+            case "Resume_Analyze":
+                resume_analyze()

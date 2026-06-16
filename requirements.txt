@@ -2,3 +2,5 @@ streamlit
 bcrypt
 supabase
 pandas
+numpy
+pypdf 
