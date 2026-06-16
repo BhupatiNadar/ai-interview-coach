@@ -19,7 +19,7 @@ def Check_Login_User(email, password):
             login,user_data=check_user(email, password)
             if login:
                 st.session_state["User_login"] = True
-                st.session_state["User_data"]=user_data
+                st.session_state["User_data"]=user_data[0]
                 st.rerun()
             else:
                 st.warning("Password or email doesn't match")
