@@ -1,13 +1,13 @@
 import streamlit as st
 import os
 
-from src.screens.Dashboard import dashboard
-from src.screens.Interviews import interviews
-from src.screens.Resume import resume
-from src.screens.Practice import practice
-from src.screens.Reports import reports
-from src.screens.LearningPlan import learning_plan
-from src.screens.Settings import settings
+from src.screens.sub_screens.Dashboard import dashboard
+from src.screens.sub_screens.Interviews import interviews
+from src.screens.sub_screens.Resume import resume
+from src.screens.sub_screens.Practice import practice
+from src.screens.sub_screens.Reports import reports
+from src.screens.sub_screens.LearningPlan import learning_plan
+from src.screens.sub_screens.Settings import settings
 
 
 def HomeScreen():
