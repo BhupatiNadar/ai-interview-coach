@@ -1,6 +1,8 @@
 import streamlit as st
 from pypdf import PdfReader
 
+from src.agents.ResumeAgent import resume_agent
+
 from src.Database.db import (
     save_resume_to_database,
     get_latest_resume
@@ -55,10 +57,14 @@ def resume():
 
                 resume_text = extract_pdf_text(file)
 
+                response = resume_agent.run(resume_text)
 
+                structured_data = response.content.model_dump()
+                
                 saved = save_resume_to_database(
                     file.name,
-                    resume_text
+                    resume_text,
+                    structured_data
                 )
 
 
@@ -75,7 +81,6 @@ def resume():
 
 
 
-    # Fetch from database
 
     resume_data = get_latest_resume()
 
@@ -110,6 +115,10 @@ def resume():
 
                 st.session_state["resume_name"] = (
                     resume_data["file_name"]
+                )
+                
+                st.session_state["resume_structured_data"] = (
+                    resume_data["structured_data"]
                 )
 
 

@@ -59,44 +59,39 @@ def check_user(email, password):
 
 
 
-def save_resume_to_database(file_name, resume_text):
+def save_resume_to_database(file_name, resume_text, structured_data):
 
     try:
 
-
         user_id = st.session_state["User_data"]["user_id"]
 
-
-
-
         Supabase \
-        .table("resumes") \
-        .delete() \
-        .eq("user_id", user_id) \
-        .execute()
+            .table("resumes") \
+            .delete() \
+            .eq("user_id", user_id) \
+            .execute()
 
 
         data = {
-
             "user_id": user_id,
-
             "file_name": file_name,
-
-            "resume_text": resume_text
-
+            "resume_text": resume_text,
+            "structured_data": structured_data
         }
 
 
+        response = (
+            Supabase
+            .table("resumes")
+            .insert(data)
+            .execute()
+        )
 
-        Supabase \
-        .table("resumes") \
-        .insert(data) \
-        .execute()
 
+        if response.data:
+            return True
 
-
-        return True
-
+        return False
 
 
     except Exception as e:

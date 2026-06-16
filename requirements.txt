@@ -4,3 +4,6 @@ supabase
 pandas
 numpy
 pypdf 
+huggingface_hub
+agno
+openai
