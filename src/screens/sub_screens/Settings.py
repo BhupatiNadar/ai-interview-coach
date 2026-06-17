@@ -8,4 +8,7 @@ def settings():
         st.session_state["User_login"] = None
         st.session_state["User_data"] = None
         st.session_state["User_tab"] = "Dashboard"
+        st.session_state["questions"]=None
+        st.session_state["current_question"]=0
+        st.session_state["answers"] = []
         st.rerun()
