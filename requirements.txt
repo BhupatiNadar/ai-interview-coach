@@ -7,3 +7,5 @@ pypdf
 huggingface_hub
 agno
 openai
+langchain-openai
+langchain

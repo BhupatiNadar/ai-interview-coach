@@ -1,14 +1,14 @@
 import streamlit as st
 import bcrypt
 
-from src.Database.config import Supabase
+from src.Database.config import get_supabase_client
 
 
 
 def create_new_user(name, email, hashed_password):
 
     return (
-        Supabase
+        get_supabase_client()
         .table("users")
         .insert({
             "user_name": name,
@@ -23,7 +23,7 @@ def create_new_user(name, email, hashed_password):
 def check_user(email, password):
 
     response1 = (
-        Supabase
+        get_supabase_client()
         .table("users")
         .select("user_email,password_hash")
         .eq("user_email",email)
@@ -32,7 +32,7 @@ def check_user(email, password):
 
 
     response2 = (
-        Supabase
+        get_supabase_client()
         .table("users")
         .select("user_id,user_name,user_email")
         .eq("user_email",email)
@@ -65,7 +65,7 @@ def save_resume_to_database(file_name, resume_text, structured_data):
 
         user_id = st.session_state["User_data"]["user_id"]
 
-        Supabase \
+        get_supabase_client() \
             .table("resumes") \
             .delete() \
             .eq("user_id", user_id) \
@@ -81,7 +81,7 @@ def save_resume_to_database(file_name, resume_text, structured_data):
 
 
         response = (
-            Supabase
+            get_supabase_client()
             .table("resumes")
             .insert(data)
             .execute()
@@ -116,7 +116,7 @@ def get_latest_resume():
 
         response = (
 
-            Supabase
+            get_supabase_client()
 
             .table("resumes")
 

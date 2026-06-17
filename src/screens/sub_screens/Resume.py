@@ -1,7 +1,7 @@
 import streamlit as st
 from pypdf import PdfReader
 
-from src.agents.ResumeAgent import resume_agent
+from src.agents.ResumeAgent import parse_resume
 
 from src.Database.db import (
     save_resume_to_database,
@@ -57,9 +57,9 @@ def resume():
 
                 resume_text = extract_pdf_text(file)
 
-                response = resume_agent.run(resume_text)
+                result = parse_resume(resume_text)
 
-                structured_data = response.content.model_dump()
+                structured_data = result.model_dump()
                 
                 saved = save_resume_to_database(
                     file.name,
@@ -106,7 +106,6 @@ def resume():
             if st.button("View"):
 
 
-                # send resume to next page
 
                 st.session_state["resume_text"] = (
                     resume_data["resume_text"]
