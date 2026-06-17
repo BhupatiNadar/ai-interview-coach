@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Voice Interview Component</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 10px; color: #fff; background-color: #1e1e1e; border-radius: 8px; }
+        #status { font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #4CAF50; }
+        #transcript { font-size: 14px; opacity: 0.8; }
+        #timer { font-size: 12px; color: #f44336; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="status">Waiting to start...</div>
+    <div id="transcript"></div>
+    <div id="timer"></div>
+
+    <script>
+        function sendMessageToStreamlitClient(type, data) {
+            var outData = Object.assign({
+                isStreamlitMessage: true,
+                type: type,
+            }, data);
+            window.parent.postMessage(outData, "*");
+        }
+
+        function init() {
+            sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
+        }
+
+        function setFrameHeight(height) {
+            sendMessageToStreamlitClient("streamlit:setFrameHeight", {height: height});
+        }
+
+        function sendDataToPython(data) {
+            sendMessageToStreamlitClient("streamlit:setComponentValue", {value: data});
+        }
+
+        let isRunning = false;
+        let silenceTimer = null;
+        let countdownTimer = null;
+        let recognition = null;
+        let finalTranscript = "";
+        let currentQuestion = "";
+
+        window.addEventListener("message", function(event) {
+            if (event.data.type !== "streamlit:render") return;
+            let args = event.data.args;
+            
+            // If already running the same question, do nothing
+            if (isRunning && currentQuestion === args.question_text) return; 
+            
+            if (args.question_text && currentQuestion !== args.question_text) {
+                currentQuestion = args.question_text;
+                isRunning = true;
+                finalTranscript = "";
+                document.getElementById("transcript").innerText = "";
+                document.getElementById("status").innerText = "🗣️ AI is speaking...";
+                setFrameHeight(120);
+
+                // 1. Speak the question
+                let utterance = new SpeechSynthesisUtterance(args.question_text);
+                
+                utterance.onend = function() {
+                    // 2. Wait 3 seconds
+                    let waitTime = 3;
+                    document.getElementById("status").innerText = `⏳ Waiting ${waitTime} seconds before listening...`;
+                    let intv = setInterval(() => {
+                        waitTime--;
+                        if (waitTime > 0) {
+                            document.getElementById("status").innerText = `⏳ Waiting ${waitTime} seconds before listening...`;
+                        } else {
+                            clearInterval(intv);
+                            startListening();
+                        }
+                    }, 1000);
+                };
+
+                utterance.onerror = function(e) {
+                    document.getElementById("status").innerText = "Error playing audio: " + e.error;
+                    setTimeout(startListening, 3000); // Fallback
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        function startListening() {
+            document.getElementById("status").innerText = "🎙️ Listening... (Speak now)";
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById("status").innerText = "❌ Speech recognition not supported in this browser.";
+                sendDataToPython("ERROR: Speech recognition not supported.");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            recognition.onresult = function(event) {
+                let interim = "";
+                finalTranscript = ""; // rebuild
+                for (let i = 0; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + " ";
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
+                }
+                document.getElementById("transcript").innerText = finalTranscript + interim;
+                setFrameHeight(document.body.scrollHeight + 20);
+                resetSilenceTimer();
+            };
+
+            recognition.onerror = function(event) {
+                document.getElementById("status").innerText = "❌ Error: " + event.error;
+                if (event.error === 'not-allowed') {
+                    sendDataToPython("ERROR: Microphone permission denied");
+                }
+            };
+
+            recognition.onend = function() {
+                if (isRunning) {
+                    // Browser stopped it but we didn't finish our 10s silence, so restart
+                    recognition.start();
+                }
+            };
+
+            resetSilenceTimer();
+            try {
+                recognition.start();
+            } catch(e) {}
+        }
+
+        function resetSilenceTimer() {
+            if (silenceTimer) clearTimeout(silenceTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+            
+            let timeLeft = 10;
+            document.getElementById("timer").innerText = `Time until auto-submit: ${timeLeft}s`;
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = `Time until auto-submit: ${timeLeft}s`;
+            }, 1000);
+
+            silenceTimer = setTimeout(finalizeAnswer, 10000);
+        }
+
+        function finalizeAnswer() {
+            isRunning = false;
+            if (silenceTimer) clearTimeout(silenceTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+            
+            if (recognition) {
+                recognition.onend = null; 
+                recognition.stop();
+            }
+            document.getElementById("status").innerText = "✅ Answer submitted!";
+            document.getElementById("timer").innerText = "";
+            sendDataToPython(finalTranscript.trim() || "(No response)");
+        }
+
+        init();
+    </script>
+</body>
+</html>

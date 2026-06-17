@@ -9,3 +9,10 @@ agno
 openai
 langchain-openai
 langchain
+streamlit-mic-recorder
+faster-whisper
+pydub
+soundfile
+pyttsx3
+streamlit-webrtc 
+av
