@@ -151,3 +151,25 @@ def get_latest_resume():
         st.error(e)
 
         return None
+    
+def save_interview_result(
+        user_id,
+        interview_type,
+        question_answers
+):
+
+    response = (
+        get_supabase_client()
+        .table("interview_session")
+        .insert(
+            {
+                "user_id": user_id,
+                "interview_type": interview_type,
+                "question_answers": question_answers
+            }
+        )
+        .execute()
+    )
+
+
+    return response

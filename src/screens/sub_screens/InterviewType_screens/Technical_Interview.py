@@ -1,7 +1,6 @@
 import streamlit as st
 
-from src.Database.db import get_latest_resume
-
+from src.Database.db import get_latest_resume,save_interview_result
 from src.agents.Technical_Interview_Agent import generate_questions
 
 
@@ -43,19 +42,43 @@ def technical_interview():
 
     if current >= len(questions):
         st.success("🎉 Interview Completed")
-        st.subheader("Your Answers")
 
-        for i, (q, a) in enumerate(zip(questions, st.session_state["answers"])):
-            st.write(f"### Question {i + 1}")
-            st.write(q)
-            st.write("### Your Answer")
-            st.write(a)
+        if not st.session_state.get("interview_saved", False):
+            interview_answers = []
 
-        if st.button("Start Over", key="start_over"):
+            for q, a in zip(questions, st.session_state["answers"]):
+                interview_answers.append(
+                    {
+                        "question": q,
+                        "answer": a
+                    }
+                )
+
+            save_interview_result(
+                user_id=st.session_state["User_data"].get("user_id"),
+                interview_type="Technical",
+                question_answers=interview_answers
+            )
+
+            st.session_state["interview_saved"] = True
+            st.success("Interview saved successfully")
+        else:
+            st.success("Interview saved successfully")
+
+        if st.button(
+            "Start Over",
+            key="start_over"
+        ):
             st.session_state["current_question"] = 0
             st.session_state["answers"] = []
-            del st.session_state["questions"]
+            st.session_state["interview_saved"] = False
+
+            if "questions" in st.session_state:
+                del st.session_state["questions"]
+
             st.rerun()
+
+
         return
 
     question = questions[current]
