@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 
 from src.screens.sub_screens.Dashboard import dashboard
 from src.screens.sub_screens.Interviews import interviews
@@ -19,16 +18,6 @@ from src.screens.sub_screens.InterviewType_screens.Voice_Interview import voice_
 
 def HomeScreen():
 
-    base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
-    logo_ai_interview_coach = os.path.join(
-        base_path,
-        "src",
-        "assets",
-        "logo_ai_interview_coach.png"
-    )
-    
-
     if "User_tab" not in st.session_state:
         st.session_state["User_tab"] = "Dashboard"
         
@@ -41,15 +30,7 @@ def HomeScreen():
 
     with col1:
 
-        sub_col1, sub_col2 = st.columns([0.8, 4])
-
-
-        with sub_col1:
-            st.image(logo_ai_interview_coach, width=50)
-
-
-        with sub_col2:
-            st.header("AI Interview Coach")
+        st.header("AI Interview Coach")
 
 
         if st.button("🏠 Dashboard", width="stretch"):

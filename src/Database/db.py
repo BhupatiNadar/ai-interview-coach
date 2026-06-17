@@ -201,3 +201,69 @@ def save_interview_evaluation(interview_id, evaluation_data):
 
 
     return response
+
+
+# ─── Reports Page Database Functions ────────────────────────────────
+
+def get_all_interviews(user_id):
+    """Fetch all interview sessions for a user, ordered by date."""
+    try:
+        response = (
+            get_supabase_client()
+            .table("interview_session")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return response.data if response.data else []
+    except Exception as e:
+        st.error(f"Error fetching interviews: {e}")
+        return []
+
+
+def get_interview_evaluations(user_id):
+    """Fetch all evaluations joined with interview sessions for a user."""
+    try:
+        response = (
+            get_supabase_client()
+            .table("interview_evaluations")
+            .select("*, interview_session!inner(user_id, interview_type, created_at)")
+            .eq("interview_session.user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return response.data if response.data else []
+    except Exception as e:
+        st.error(f"Error fetching evaluations: {e}")
+        return []
+
+
+def get_report_data(user_id):
+    """Aggregate all data needed for the Reports page."""
+    interviews = get_all_interviews(user_id)
+    evaluations = get_interview_evaluations(user_id)
+    return {
+        "interviews": interviews,
+        "evaluations": evaluations
+    }
+
+
+# ─── Dashboard Page Database Functions ──────────────────────────────
+
+def get_recent_interviews(user_id, limit=5):
+    """Fetch the most recent interview sessions for a user."""
+    try:
+        response = (
+            get_supabase_client()
+            .table("interview_session")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return response.data if response.data else []
+    except Exception as e:
+        st.error(f"Error fetching recent interviews: {e}")
+        return []
