@@ -173,3 +173,31 @@ def save_interview_result(
 
 
     return response
+
+
+def save_interview_evaluation(interview_id, evaluation_data):
+
+    response = (
+        get_supabase_client()
+        .table("interview_evaluations")
+        .insert(
+            {
+                "interview_id": interview_id,
+
+                "total_score":
+                evaluation_data["total_score"],
+
+
+                "overall_feedback":
+                evaluation_data["overall_feedback"],
+
+
+                "evaluations":
+                evaluation_data["evaluations"]
+            }
+        )
+        .execute()
+    )
+
+
+    return response

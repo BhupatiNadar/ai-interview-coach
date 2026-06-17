@@ -70,5 +70,5 @@ def dashboard():
         st.write("Recent Interviews")
         
     with col2:
-        st.link_button("View all",url="#")
+        st.button("View all")
         
