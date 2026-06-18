@@ -40,6 +40,7 @@
         let silenceTimer = null;
         let countdownTimer = null;
         let recognition = null;
+        let persistentTranscript = "";
         let finalTranscript = "";
         let currentQuestion = "";
 
@@ -53,6 +54,7 @@
             if (args.question_text && currentQuestion !== args.question_text) {
                 currentQuestion = args.question_text;
                 isRunning = true;
+                persistentTranscript = "";
                 finalTranscript = "";
                 document.getElementById("transcript").innerText = "";
                 document.getElementById("status").innerText = "🗣️ AI is speaking...";
@@ -71,6 +73,7 @@
                             document.getElementById("status").innerText = `⏳ Waiting ${waitTime} seconds before listening...`;
                         } else {
                             clearInterval(intv);
+                            resetSilenceTimer();
                             startListening();
                         }
                     }, 1000);
@@ -78,7 +81,10 @@
 
                 utterance.onerror = function(e) {
                     document.getElementById("status").innerText = "Error playing audio: " + e.error;
-                    setTimeout(startListening, 3000); // Fallback
+                    setTimeout(() => {
+                        resetSilenceTimer();
+                        startListening();
+                    }, 3000); // Fallback
                 };
 
                 window.speechSynthesis.speak(utterance);
@@ -86,13 +92,22 @@
         });
 
         function startListening() {
-            document.getElementById("status").innerText = "🎙️ Listening... (Speak now)";
-            
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 document.getElementById("status").innerText = "❌ Speech recognition not supported in this browser.";
                 sendDataToPython("ERROR: Speech recognition not supported.");
                 return;
+            }
+
+            // Cleanup old instance if it exists
+            if (recognition) {
+                try {
+                    recognition.onend = null;
+                    recognition.onerror = null;
+                    recognition.onresult = null;
+                    recognition.onstart = null;
+                    recognition.abort();
+                } catch(e) {}
             }
 
             recognition = new SpeechRecognition();
@@ -101,34 +116,50 @@
             
             recognition.onresult = function(event) {
                 let interim = "";
-                finalTranscript = ""; // rebuild
+                let currentSessionFinal = "";
                 for (let i = 0; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + " ";
+                        currentSessionFinal += event.results[i][0].transcript + " ";
                     } else {
                         interim += event.results[i][0].transcript;
                     }
                 }
+                
+                finalTranscript = persistentTranscript + currentSessionFinal;
                 document.getElementById("transcript").innerText = finalTranscript + interim;
                 setFrameHeight(document.body.scrollHeight + 20);
-                resetSilenceTimer();
+                resetSilenceTimer(); // Reset timer only when actual voice is captured
             };
 
             recognition.onerror = function(event) {
-                document.getElementById("status").innerText = "❌ Error: " + event.error;
                 if (event.error === 'not-allowed') {
+                    document.getElementById("status").innerText = "❌ Error: Microphone permission denied";
                     sendDataToPython("ERROR: Microphone permission denied");
+                } else if (event.error === 'network') {
+                    document.getElementById("status").innerText = "⚠️ Network hiccup, reconnecting...";
+                    // let onend handle the restart
+                } else if (event.error === 'no-speech') {
+                    // Ignore no-speech error, keep listening
+                } else {
+                    document.getElementById("status").innerText = "❌ Error: " + event.error;
                 }
             };
 
             recognition.onend = function() {
                 if (isRunning) {
-                    // Browser stopped it but we didn't finish our 10s silence, so restart
-                    recognition.start();
+                    // Save the final transcript from this session before restarting
+                    persistentTranscript = finalTranscript;
+                    // Create a fresh instance instead of reusing the old one to avoid zombie state
+                    setTimeout(startListening, 50);
                 }
             };
 
-            resetSilenceTimer();
+            recognition.onstart = function() {
+                if (isRunning) {
+                    document.getElementById("status").innerText = "🎙️ Listening... (Speak now)";
+                }
+            };
+
             try {
                 recognition.start();
             } catch(e) {}
@@ -156,7 +187,7 @@
             
             if (recognition) {
                 recognition.onend = null; 
-                recognition.stop();
+                try { recognition.stop(); } catch(e) {}
             }
             document.getElementById("status").innerText = "✅ Answer submitted!";
             document.getElementById("timer").innerText = "";
