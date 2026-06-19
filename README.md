@@ -213,6 +213,15 @@ The app will open at `http://localhost:8501`.
 - [ ] Exportable PDF reports (currently `.txt`)
 - [ ] Mobile-responsive layout improvements
 ---
+
+##🧠 Why This Project is "Agentic"
+This project goes beyond simple prompting. It utilizes:
+
+1. Contextual Adaptation: The ResumeAgent extracts a structured candidate profile. Every subsequent agent uses this profile as ground truth, ensuring questions are never generic.
+
+2. Dynamic Feedback Loops: The LearningPlanAgent doesn't just output text; it queries your historical interview performance in Supabase to calculate skill gaps and generate a 30-day improvement trajectory.
+
+3. Self-Healing Logic: The evaluation pipeline includes automated retry logic and schema validation (Pydantic), ensuring the AI consistently delivers structured, machine-readable feedback for the dashboard.
  
 ## 🤝 Contributing
  
