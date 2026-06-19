@@ -46,16 +46,16 @@ It's designed to feel like a real interview prep coach: upload your resume once,
  
 <table>
   <tr>
-    <td align="center"><b>🔐 Login / Signup</b></td>
-    <td align="center"><b>📊 Dashboard</b></td>
+    <td align="center"><b>🔐 Signup</b></td>
+    <td align="center"><b>🔐 Login </b></td>
   </tr>
   <tr>
     <td><img src="screenshots/Signup.png" alt="Signup" width="400"/></td>
     <td><img src="screenshots/Login.png" alt="Authentication Screen" width="400"/></td>
   </tr>
   <tr>
+    <td align="center"><b>📊 Dashboard</b></td>
     <td align="center"><b>💻 Technical Interview</b></td>
-    <td align="center"><b>🎙️ Voice Interview</b></td>
   </tr>
   <tr>
     <td><img src="screenshots/Dashboard.png" alt="Dashboard" width="400"/></td>
